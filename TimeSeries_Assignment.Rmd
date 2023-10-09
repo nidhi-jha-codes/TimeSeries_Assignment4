@@ -1,0 +1,163 @@
+---
+title: "TimeSeriesAnalysis_Assignment3"
+output: html_document
+date: "2023-10-08"
+---
+
+```{r}
+# Importing Excel file into data frame MyDf 
+
+library(readxl)
+MyDf=read_excel("TimeSeriesData_LiquourSales.xls")
+
+#Change column names to readable form
+
+colnames(MyDf) <- c("Date", "Sales")
+
+# Change date format from POSIXct to Date.
+
+MyDf$Date <- as.Date(MyDf$Date)
+
+```
+
+```{r}
+# To run the forecasting models in 'R', we need to convert the data into a time series. 
+
+library(fpp)
+library(fpp2)
+library(TTR)
+
+Tsales <- ts(MyDf$Sales, start = c(2018,1), end = c(2023,7), frequency = 12)
+
+plot(Tsales)
+
+Acf(Tsales)
+```
+
+```{r}
+# Naive
+naive_forecast <- naive(Tsales,6) # 6 is the forecasting period
+plot(naive_forecast)
+summary(naive_forecast)
+
+
+# Random Walk
+rwf_forecast <- rwf(Tsales,6)
+plot(rwf_forecast)
+summary(rwf_forecast)
+
+rwf_forecast1 <- rwf(Tsales,6, drift=TRUE) 
+plot(rwf_forecast1)
+
+# Seasonal Naive
+snaive_forecast <- snaive(Tsales,6)
+plot(snaive_forecast)
+summary(snaive_forecast)
+```
+
+
+```{r}
+# Exponential smoothing
+
+#ETS Forecasting
+
+#decomposition
+ets_forecasting <- ets(Tsales)
+plot(ets_forecasting)
+
+Forecast_ETS=forecast(ets_forecasting)
+plot(Forecast_ETS)
+
+# Holt Winters
+
+HW<- HoltWinters(Tsales)
+plot(HW)
+
+HW_forecast<-forecast(HW, h=6)
+summary(HW_forecast)
+plot(HW_forecast)
+```
+
+```{r}
+# Average Methods
+
+#take Mean of all available history
+
+mean_forecast <- meanf(Tsales,6) # 6 is the forecasting period
+plot(mean_forecast)
+summary(mean_forecast)
+
+# Moving Averages
+MA_model <- ma(Tsales,order=6)
+plot(MA_model)
+MA_forecast <- forecast(MA_model, 6)
+plot(MA_forecast)
+
+```
+
+```{r}
+#SSE Simple
+
+SSE_Simple <- HoltWinters(Tsales,beta=TRUE,gamma=FALSE)
+SSE_Forecast<-forecast(SSE_Simple)
+plot(SSE_Forecast)
+summary(SSE_Forecast)
+SSE_Simple$SSE
+head(SSE_Simple$fitted)
+
+SSE_Simple1 <- HoltWinters(Tsales,beta=TRUE,gamma=TRUE)
+SSE_Forecast1<-forecast(SSE_Simple1)
+plot(SSE_Forecast1)
+summary(SSE_Forecast1)
+
+
+SSE_Simple2 <- HoltWinters(Tsales,beta=FALSE,gamma=TRUE)
+SSE_Forecast2<-forecast(SSE_Simple2)
+plot(SSE_Forecast2)
+summary(SSE_Forecast2)
+
+```
+
+
+```{r}
+# Plot the time series and different model forecasts in one chart
+
+
+plot(Forecast_ETS)
+lines(HW_forecast$mean,col="purple")
+lines(naive_forecast$mean,col="purple")
+lines(rwf_forecast$mean,col="red")
+lines(snaive_forecast$mean,col="yellow")
+lines(ets_forecasting$mean,col="blue")
+lines(SSE_Simple$mean,col="green")
+lines(SSE_Simple1$mean,col="cyan")
+lines(SSE_Simple2$mean,col="brown")
+```
+
+
+```{r}
+
+# Pick an accuracy measure, compare your models, and state the best model based on the accuracy comparison 
+
+accuracy(naive_forecast)
+
+accuracy(mean_forecast)
+
+accuracy(rwf_forecast)
+
+accuracy(rwf_forecast1)
+
+accuracy(snaive_forecast)
+
+accuracy(HW_forecast)  
+
+accuracy(Forecast_ETS)
+
+accuracy(SSE_Forecast)
+
+accuracy(SSE_Forecast1)
+
+accuracy(SSE_Forecast2)
+
+```
+
