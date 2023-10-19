@@ -4,129 +4,165 @@ output: html_document
 date: "2023-10-18"
 ---
 
+
+# Explain your model.
+
+The dataset set shows the Retail sales of Beer, Wine, and Liquor Stores from January 2018 to July 2023. The sales are in millions of dollars over the period mentioned above. 
+
+The time series graph of this dataset shows the seasonality in sales every year. The sales values grow over the year, especially during the holiday season. The graph shows the spike highest during the year's end and second highest during the month mid-year i.e., May and July. The graph shows a decline in sales at the beginning of the year.
+
+Looking at the time series data it can also be inferred that there has been a visible increasing trend.
+Sales growth has been shown over the last 5 years. It has increased from 2018 to 2023.
+
+
+
+
 ```{r}
 # Importing Excel file into data frame MyDf 
-
 library(readxl)
 MyDf=read_excel("TimeSeriesData_LiquourSales.xls")
 
-#Change column names to readable form
+```
 
+
+```{r}
+
+# Change column names to readable form
 colnames(MyDf) <- c("Date", "Sales")
-
-# Change date format from POSIXct to Date.
-
-MyDf$Date <- as.Date(MyDf$Date)
 
 ```
 
-```{r}
-# To run the forecasting models in 'R', we need to convert the data into a time series. 
 
+```{r}
+# Change date format from POSIXct to Date.
+MyDf$Date <- as.Date(MyDf$Date)
+```
+
+ 
+```{r}
+# To run the forecasting models in 'R', we need to convert the data into a time series.
 library(fpp)
 library(fpp2)
 library(TTR)
+```
 
+```{r}
 # Converting Data into timeseries.
-Tsales <- ts(MyDf$Sales, start = c(2018,1), end = c(2023,7), frequency = 12)
 
+Tsales <- ts(MyDf$Sales, start = c(2018,1), end = c(2023,7), frequency = 12)
+```
+
+```{r}
 plot(Tsales)
 
 Acf(Tsales)
-
-#1.	Explain your model:
-
-# The dataset set shows the Retail sales of Beer, Wine, and Liquor Stores from January 2018 to July 2023. The sales are in millions of dollars over the period mentioned above. 
-
-# The time series graph of this dataset shows the seasonality in sales every year. The sales values grow over the year, especially during the holiday season. The graph shows the spike highest during the year's end and second highest during the month mid-year i.e., May and July. The graph shows a decline in sales at the beginning of the year.
-
-# Looking at the time series data it can also be inferred that there has been a visible increasing trend. Sales growth has been shown over the last 5 years. It has increased from 2018 to 2023.
 ```
 
-```{r}
-# Naive Forecast:  The Naive forecasting method relies solely on the most recent data point to make predictions for future data points. It is a straightforward approach suitable for small datasets with minimal or no discernible trends or seasonality. However, in the context of the time series data provided in this assignment, the Naive method tends to produce an inaccurate result, as it may not capture complex patterns or underlying trends over a longer time.
+## Naive Forecast:
 
+The Naive forecasting method relies solely on the most recent data point to make predictions for future data points. It is a straightforward approach suitable for small datasets with minimal or no discernible trends or seasonality. However, in the context of the time series data provided in this assignment, the Naive method tends to produce an inaccurate result, as it may not capture complex patterns or underlying trends over a longer time.
+
+```{r}
 naive_forecast <- naive(Tsales,6) # 6 is the forecasting period
 plot(naive_forecast)
+```
 
-# Random Walk:The Random Walk method is a simple forecasting technique that assumes that future values will be the same as the most recent observed value. In other words, it forecasts by repeating the last observed value for the specified number of periods. In the dataset, it is showing a similar result as the Naïve forecast which does not work for this dataset.
+## Random Walk:
 
+The Random Walk method is a simple forecasting technique that assumes that future values will be the same as the most recent observed value. In other words, it forecasts by repeating the last observed value for the specified number of periods. In the dataset, it is showing a similar result as the Naïve forecast which does not work for this dataset.
+
+```{r}
 rwf_forecast <- rwf(Tsales,6)
 plot(rwf_forecast)
 summary(rwf_forecast)
+```
 
-# Random walk with a drift: This method considers the most recent data point with a drift term and hence can provide good results for a short time period. In this case, this is not capturing the seasonality but showing a trend over time.
- 
+## Random walk with a drift: 
+
+This method considers the most recent data point with a drift term and hence can provide good results for a short time period. In this case, this is not capturing the seasonality but showing a trend over time.
+
+```{r}
 rwf_forecast1 <- rwf(Tsales,6, drift=TRUE) 
 plot(rwf_forecast1)
+```
 
+# Seasonal Naive: 
 
-# Seasonal Naive: Seasonal data exhibits a repeating pattern or seasonality, typically occurring at regular intervals annually. For example, sales data increases during holidays. This captures the accurate result for the provided dataset with high seasonality.
+Seasonal data exhibits a repeating pattern or seasonality, typically occurring at regular intervals annually. For example, sales data increases during holidays. This captures the accurate result for the provided dataset with high seasonality.
 
+```{r}
 snaive_forecast <- snaive(Tsales,6)
 plot(snaive_forecast)
 summary(snaive_forecast)
-
 ```
 
 
+## Exponential smoothing
+
+### ETS Forecasting
+This method applies exponential smoothing to the time series data and predicts the data points. It does not work for this dataset as it does not account for trend or seasonality.
+
 ```{r}
-# Exponential smoothing
 
-#ETS Forecasting
-
-# ETS: This method applies exponential smoothing to the time series data and predicts the data points. It does not work for this dataset as it does not account for trend or seasonality.
-
-#decomposition
+#Exponential
 ets_forecasting <- ets(Tsales)
 plot(ets_forecasting)
 
 Forecast_ETS=forecast(ets_forecasting)
 plot(Forecast_ETS)
 
-# Holt Winters
+```
 
-# Holt-Winters: Holt-Winters is a triple exponential smoothing method that considers three main components: level (the current value of the series), trend (the direction in which the series is moving), and seasonality (repeating patterns within the data). This is particularly useful in this dataset which deals with time series data that exhibit trend and seasonality. 
+## Holt Winters
 
+### Holt-Winters: 
+Holt-Winters is a triple exponential smoothing method that considers three main components: level (the current value of the series), trend (the direction in which the series is moving), and seasonality (repeating patterns within the data). This is particularly useful in this dataset which deals with time series data that exhibit trend and seasonality. 
+
+
+```{r}
 HW<- HoltWinters(Tsales)
 plot(HW)
-
 HW_forecast<-forecast(HW, h=6)
 summary(HW_forecast)
 plot(HW_forecast)
-
 ```
 
+
+## Average Methods
+
+### Take Mean of all available history
+
+
+### Mean Forecast: 
+Mean Forecasting predicts future values by taking historical observations' average (mean). In this case, the forecasted values for the next 6 periods will be calculated as the average of the historical values in the Tsales data. It calculates the mean of the observed values in the time series, which is irrelevant to predicting future values as this data set has seasonality and trend. 
+
 ```{r}
-# Average Methods
-
-#take Mean of all available history
-
-
-# Mean Forecast: Mean Forecasting predicts future values by taking historical observations' average (mean). In this case, the forecasted values for the next 6 periods will be calculated as the average of the historical values in the Tsales data. It calculates the mean of the observed values in the time series, which is irrelevant to predicting future values as this data set has seasonality and trend. 
 
 mean_forecast <- meanf(Tsales,6) # 6 is the forecasting period
 plot(mean_forecast)
 summary(mean_forecast)
+```
 
-# Moving Averages: This method adds weights to the data points with a higher weight to the recent data points and can provide a better prediction. This forecasts future values by averaging a specified number of the most recent observations (the order) to reduce noise and highlight underlying trends. In my case, it is showing an increase over time.
+### Moving Averages: 
+This method adds weights to the data points with a higher weight to the recent data points and can provide a better prediction. This forecasts future values by averaging a specified number of the most recent observations (the order) to reduce noise and highlight underlying trends. In my case, it is showing an increase over time.
 
+
+```{r}
 MA_model <- ma(Tsales,order=6)
 plot(MA_model)
 MA_forecast <- forecast(MA_model, 6)
 plot(MA_forecast)
-
-
 ```
 
+## SSE Simple
+
+#### Applies the Holt-Winters exponential smoothing method to this time series data with specific settings for the smoothing parameters. 
+
 ```{r}
-#SSE Simple
 
-# Applies the Holt-Winters exponential smoothing method to this time series data with specific settings for the smoothing parameters. 
+### beta=TRUE: It means the model includes a trend component. This implies that the Holt-Winters model will consider the presence of a linear trend in the data, allowing it to capture both the level (average value) and the direction (increase or decrease) of the data over time.
 
-# beta=TRUE: It means the model includes a trend component. This implies that the Holt-Winters model will consider the presence of a linear trend in the data, allowing it to capture both the level (average value) and the direction (increase or decrease) of the data over time.
-
-# gamma=FALSE: When gamma=FALSE, the model does not include a seasonality component. It assumes that the data does not exhibit any repeating patterns or seasonality, and the model focuses solely on the trend and level components.
+### gamma=FALSE: When gamma=FALSE, the model does not include a seasonality component. It assumes that the data does not exhibit any repeating patterns or seasonality, and the model focuses solely on the trend and level components.
 
 SSE_Simple <- HoltWinters(Tsales,beta=TRUE,gamma=FALSE)
 SSE_Forecast<-forecast(SSE_Simple)
@@ -144,12 +180,9 @@ SSE_Forecast1<-forecast(SSE_Simple1)
 plot(SSE_Forecast1)
 summary(SSE_Forecast1)
 
-
-
 # beta=FALSE: Setting beta=FALSE means that the model does not include a trend component. This implies that the Holt-Winters model assumes that the data does not exhibit a linear trend over time and focuses solely on capturing seasonality and the level (average value) of the data.
 
 # gamma=TRUE: The model includes a seasonality component. It indicates that the Holt-Winters model considers the presence of repeating patterns or seasonality in the data, such as monthly or yearly cycles.
-
 
 SSE_Simple2 <- HoltWinters(Tsales,beta=FALSE,gamma=TRUE)
 SSE_Forecast2<-forecast(SSE_Simple2)
@@ -158,11 +191,8 @@ summary(SSE_Forecast2)
 
 ```
 
-
+## Plot the time series and different model forecasts in one chart
 ```{r}
-# Plot the time series and different model forecasts in one chart
-
-
 plot(Forecast_ETS)
 lines(HW_forecast$mean,col="purple")
 lines(naive_forecast$mean,col="purple")
@@ -174,10 +204,35 @@ lines(SSE_Simple1$mean,col="cyan")
 lines(SSE_Simple2$mean,col="brown")
 ```
 
+## Pick an accuracy measure, compare your models, and state the best model based on the accuracy comparison 
 
+### Accuracy Measure Selected for Model Comparison:Mean Absolute Percentage Error (MAPE):
+
+#### The Mean Absolute Percentage Error (MAPE)
+It quantifies the average forecast errors in terms of percentages. It is a valuable accuracy metric because it provides a percentage-based understanding of forecast accuracy that is easily comprehensible to a wide audience. For instance, a MAPE of 3% signifies a 3% disparity between the actual and forecasted data. Generally, a lower MAPE indicates a higher level of accuracy in forecasting.
+
+### MAPE for different Models:
+
+ ● Mean Forecast: 13.37699
+ 
+ ● Naive Forecast: 9.680379
+ 
+ ● Random Walk Forecast: 9.680379
+ 
+ ● Random Walk Forecast with Drift: 9.606246
+ 
+ ● Simple Naive Forecast: 5.764731
+ 
+ ● Exponential smoothing Forecast: 1.826156
+ 
+ ● Holt-Winter Forecast: 2.181053
+ 
+ ● SSE Simple Forecast: 11.0221
+ 
+ ● SSE Simple Forecast1: 3.023347
+ 
+ ● SSE Simple Forecast2: 2.363931
 ```{r}
-
-# Pick an accuracy measure, compare your models, and state the best model based on the accuracy comparison 
 
 accuracy(naive_forecast)
 
@@ -199,28 +254,14 @@ accuracy(SSE_Forecast1)
 
 accuracy(SSE_Forecast2)
 
-# Accuracy Measure Selected for Model Comparison:Mean Absolute Percentage Error (MAPE):
+```
 
-# The Mean Absolute Percentage Error (MAPE) quantifies the average forecast errors in terms of percentages. It is a valuable accuracy metric because it provides a percentage-based understanding of forecast accuracy that is easily comprehensible to a wide audience. For instance, a MAPE of 3% signifies a 3% disparity between the actual and forecasted data. Generally, a lower MAPE indicates a higher level of accuracy in forecasting.
+### Pick the best model: 
+Looking at the MAPE for all the models the best models to use for forecasting are:
+ 1. Exponential Smoothing Forecast
+ 2. Holt-Winters Forecast
 
-# MAPE for different Models:
-
-# ● Mean Forecast: 13.37699
-# ● Naive Forecast: 9.680379
-# ● Random Walk Forecast: 9.680379
-# ● Random Walk Forecast with Drift: 9.606246
-# ● Simple Naive Forecast: 5.764731
-# ● Exponential smoothing Forecast: 1.826156
-# ● Holt-Winter Forecast: 2.181053
-# ● SSE Simple Forecast: 11.0221
-# ● SSE Simple Forecast1: 3.023347
-# ● SSE Simple Forecast2: 2.363931
-
-# Pick the best model: Looking at the MAPE for all the models the best models to use for forecasting are:
-# 1. Exponential Smoothing Forecast
-# 2. Holt-Winters Forecast
-
-# However,it's important to note that the Exponential Smoothing Forecast does not factor in trends or seasonality, which can lead to less accurate forecasts when dealing with a longer time horizon. Therefore, the most suitable model for this particular time series dataset is the Holt-Winters Forecast.
+##### However,it's important to note that the Exponential Smoothing Forecast does not factor in trends or seasonality, which can lead to less accurate forecasts when dealing with a longer time horizon. Therefore, the most suitable model for this particular time series dataset is the Holt-Winters Forecast.
 
 ```
 
